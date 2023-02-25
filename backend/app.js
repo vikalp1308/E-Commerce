@@ -7,7 +7,7 @@ global.pool = require('./database/connection')
 var cors = require('cors'); //share resources with different domain
 
 var products = require('./routes/products');
-var users = require('./routes/users');
+var orders = require('./routes/orders');
 var login = require('./routes/login');
 var signup = require('./routes/signup')
 
@@ -27,12 +27,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 //routes
 app.use('/products', products);
-app.use('/users', users);
+app.use('/orders', orders);
 app.use('/login', login);
 app.use('/signup', signup);
 
 module.exports = app;
-
-
-
-

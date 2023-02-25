@@ -9,14 +9,14 @@ router.get('/', async(req,res) => {
         let startValue;
         let endValue;
         if(page > 0){
-            startValue = ( page*limit ) - limit;
-            endValue = ( page*limit );
+            startValue = ( page*limit ) - limit + 1;
+            endValue = page*limit;
         } else {
             startValue = 0;
             endValue = 10;
         }
         
-        const products = await pool.query(`select c.title, p.title, p.price, p.quantity, p.image, p.id from products as p JOIN categories as c ON p.cat_id = c.id ORDER BY p.id ASC limit ?, ?`, [startValue, endValue])
+        const products = await pool.query(`select * from (select c.cat_title, p.price, p.quantity, p.image, p.title, Row_number() over (order by p.id asc) as id from products as p JOIN categories as c ON p.cat_id = c.id)tbl where id between ? and ?;`, [startValue, endValue])
         if(products.length>0){
             res.status(200).json({
                 count: products.length,
@@ -33,7 +33,7 @@ router.get('/', async(req,res) => {
 router.get('/:id', async(req,res) => {
     try{
         let productId = req.params.id
-        const products = await pool.query(`select c.title, p.title, p.price, p.quantity, p.image, p.images, p.id from products as p JOIN categories as c ON p.cat_id = c.id && p.id = ?`, [productId])
+        const products = await pool.query(`select c.cat_title, p.title, p.price, p.quantity, p.image, p.images, p.id from products as p JOIN categories as c ON p.cat_id = c.id && p.id = ?`, [productId])
         if(products.length>0){
             res.status(200).json(products)
         } else{
@@ -58,7 +58,8 @@ router.get('/category/:catName', async(req,res) => {
             endValue = 10;
         }
         let catName = req.params.catName
-        const products = await pool.query(`select c.title, p.title, p.price, p.quantity, p.image, p.id from products as p JOIN categories as c ON p.cat_id = c.id  where c.title LIKE '%${catName}%' ORDER BY p.id ASC limit ?, ? `, [startValue, endValue])
+        const products = await pool.query(`select c.cat_title, p.title, p.price, p.quantity, p.image, p.id from products as p JOIN categories as c ON p.cat_id = c.id  where c.cat_title LIKE '%${catName}%' ORDER BY p.id ASC limit ?, ? `, [startValue, endValue])
+        // const products = await pool.query(`select * from (select c.cat_title, p.price, p.quantity, p.image, p.title, Row_number() over (order by p.id asc) as id from products as p JOIN categories as c ON p.cat_id = c.id)tbl where cat_title LIKE '%${catName}%' and id between ? and ?;`, [startValue, endValue])
         if(products.length>0){
             res.status(200).json({
                 count: products.length,
